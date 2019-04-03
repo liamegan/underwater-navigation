@@ -1,0 +1,42 @@
+body, html {
+  height: 100%;
+  margin: 0;
+}
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.main-nav__canvas {
+  display: none;
+}
+
+nav.main-nav {
+  font-family: 'Abril Fatface';
+  ul, li {
+  }
+}
+ul.main-nav__fallback {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+ul.main-nav__fallback a {
+  color: #28323c;
+  font-size: 2em;
+  text-decoration: none;
+}
+
+@media only screen and (min-width: 40.063em) {
+  .main-nav__canvas {
+    display: block;
+    height: 100%;
+    left: 0px;
+    position: fixed;
+    top: 0px;
+    width: 100%;
+    z-index: 100;
+  }
+}
