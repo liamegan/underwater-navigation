@@ -289,14 +289,14 @@ class Navigation {
       backgroundColor: 0xFFFFFF,
       width: window.innerWidth,
       height: window.innerHeight,
-      resolution: 3
+      resolution: 2
     });
     this.app.stage.x = window.innerWidth * .5;
     this.app.stage.y = window.innerHeight * .5;
     
     this.container = new PIXI.Container();
-    this.screenFilter = new ScreenFilter(3);
-    // this.app.stage.filters = [this.screenFilter];
+    this.screenFilter = new ScreenFilter(2);
+    this.app.stage.filters = [this.screenFilter];
     
     let ipos = 0;
     this.navWidth = 0;
