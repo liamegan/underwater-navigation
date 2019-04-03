@@ -12,7 +12,7 @@ class ScreenFilter extends PIXI.Filter {
     this.uniforms.time = 0;
     this.uniforms.mouse = [0,0];
     this.uniforms.u_resolution = [window.innerWidth*this.resolution,window.innerHeight*this.resolution];
-    this.uniforms.ratio = window.innerHeight < window.innerWidth ? window.innerWidth / window.innerHeight : window.innerHeight / window.innerWidth;
+    this.uniforms.ratio = this.uniforms.u_resolution[1] < this.uniforms.u_resolution[0] ? this.uniforms.u_resolution[0] / this.uniforms.u_resolution[1] : this.uniforms.u_resolution[1] / this.uniforms.u_resolution[0];
     this.autoFit = false;
     
     this.onResize = this.onResize.bind(this);
@@ -20,7 +20,7 @@ class ScreenFilter extends PIXI.Filter {
   }
   onResize() {
     this.uniforms.u_resolution = [window.innerWidth*this.resolution,window.innerHeight*this.resolution];
-    this.uniforms.ratio = window.innerHeight < window.innerWidth ? window.innerWidth / window.innerHeight : window.innerHeight / window.innerWidth;
+    this.uniforms.ratio = this.uniforms.u_resolution[1] < this.uniforms.u_resolution[0] ? this.uniforms.u_resolution[0] / this.uniforms.u_resolution[1] : this.uniforms.u_resolution[1] / this.uniforms.u_resolution[0];
   }
   static get fragmentSrc() {
     return `
@@ -83,10 +83,14 @@ class ScreenFilter extends PIXI.Filter {
     polar.y += smoothstep(.1, 2., abs(uvm.x) * 2.);
     textureCoord = vec2( cos(polar.y) * polar.x, sin(polar.y) * polar.x );
     textureCoord.y *= 1. - abs(uvm.x * 1.5) * .3;
+
     //textureCoord *= 1. - smoothstep(.2, .5, length(uvm)) * .3;
+
     textureCoord += noise(uv, 10000. + sin(time) * 5000.) * smoothstep(.15, 2., abs(uvm.x)) * .6;
     textureCoord += .5;
+
     // vec4 tex = texture2D(uSampler, textureCoord);
+
     vec4 tex = blur13(uSampler, textureCoord, u_resolution, vec2(p.x*10., 0.));
     tex += blur13(uSampler, textureCoord, u_resolution, vec2(0., p.x*10.));
     tex *= .5;
@@ -292,7 +296,7 @@ class Navigation {
     
     this.container = new PIXI.Container();
     this.screenFilter = new ScreenFilter(3);
-    this.app.stage.filters = [this.screenFilter];
+    // this.app.stage.filters = [this.screenFilter];
     
     let ipos = 0;
     this.navWidth = 0;
@@ -309,7 +313,7 @@ class Navigation {
     this.background.beginFill(0xFFFFFF, 0.);
     this.background.position.x = window.innerWidth * -.5;
     this.background.position.y = window.innerHeight * -.5;
-    this.background.drawRect(0,0, window.innerWidth, window.innerHeight);
+    this.background.drawRect(-this.maskpadding,-this.maskpadding, window.innerWidth+this.maskpadding, window.innerHeight+this.maskpadding);
     this.background.endFill();
     this.app.stage.addChild(this.background);
     this.app.stage.addChild(this.container);
@@ -318,7 +322,7 @@ class Navigation {
     mask.beginFill(0xFFFFFF, .5);
     mask.position.x = window.innerWidth * -.5;
     mask.position.y = window.innerHeight * -.5;
-    mask.drawRect(0,0, window.innerWidth, window.innerHeight);
+    mask.drawRect(-this.maskpadding,-this.maskpadding, window.innerWidth+this.maskpadding, window.innerHeight+this.maskpadding);
     mask.endFill();
     this.container.mask = mask;
 
@@ -433,14 +437,14 @@ class Navigation {
     this.background.beginFill(0xFFFFFF, 0.);
     this.background.position.x = window.innerWidth * -.5;
     this.background.position.y = window.innerHeight * -.5;
-    this.background.drawRect(0,0, window.innerWidth, window.innerHeight);
+    this.background.drawRect(-this.maskpadding,-this.maskpadding, window.innerWidth+this.maskpadding, window.innerHeight+this.maskpadding);
     this.background.endFill();
     
     const mask = new PIXI.Graphics();
     mask.beginFill(0xFFFFFF, .5);
     mask.position.x = window.innerWidth * -.5;
     mask.position.y = window.innerHeight * -.5;
-    mask.drawRect(0,0, window.innerWidth, window.innerHeight);
+    mask.drawRect(-this.maskpadding,-this.maskpadding, window.innerWidth+this.maskpadding, window.innerHeight+this.maskpadding);
     mask.endFill();
     this.container.mask = mask;
   }
@@ -488,6 +492,14 @@ class Navigation {
   }
   get mousepos() {
     return this._mousepos || [0,0];
+  }
+
+  set maskpadding(value) {
+    if(!isNaN(value)) this._maskpadding = value;
+  }
+  get maskpadding() {
+    if(!isNaN(this._maskpadding)) return this._maskpadding;
+    return 100;
   }
 }
 
