@@ -17,7 +17,7 @@ label:focus {
   left: -999em;
 }
 #main-nav-toggle:checked ~ nav.main-nav {
-  display: block;
+  display: flex;
 }
 
 .main-nav__canvas {
@@ -25,12 +25,17 @@ label:focus {
 }
 
 nav.main-nav {
+  align-items: center;
   background: #FFF;
   font-family: 'Abril Fatface';
+  justify-content: center;
   display: none;
   height: 100%;
-  position: relative;
+  left: 0px;
+  position: fixed;
+  top: 0px;
   width: 100%;
+  z-index: 1;
 }
 ul.main-nav__fallback {
   list-style: none;

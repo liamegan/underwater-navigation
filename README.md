@@ -12,7 +12,7 @@ An WebGL navigation that builds from any supplied HTML navigation, Liam Egan
 
 - [PixiJS](http://www.pixijs.com/)
 - [Perlin Noise](https://mrl.nyu.edu/~perlin/paper445.pdf) by Ken Perlin
-- Font: [Abril Fatface](https://www.type-together.com/abril-font) by Typetogether (courtesy Google Fonts)
+- Font: [Abril Fatface](https://fonts.google.com/specimen/Abril+Fatface?selection.family=Abril+Fatface) by Typetogether (courtesy Google Fonts)
 - Inspired by: [Holidays Menu](https://dribbble.com/shots/5734493-Holidays-Menu) by BestServedBold
 
 ## License
