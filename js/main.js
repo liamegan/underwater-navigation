@@ -383,12 +383,15 @@ class Navigation {
     this.nav = nav;
 
     // Set up the basic object property requirements.
+    this.initialised = false;   // Whether the navigation is already initialised
     this.navItems = [];         // This will contain the generic nav item objects
     this.app = null;            // The PIXI application
     this.container = null;      // The PIXI container element that will contain the nav elements
     this.screenFilter = null;   // The screen filter to be appliced to the container
     this.navWidth = null;       // The full width of the navigation
     this.background = null;     // The container for the background graphic
+    this.pointerdown = false;   // Indicates whether the user's pointer is currently down on the page
+    this.dragging = false;      // Indicates whether the nav is currently being dragged. This is here to allow for both the dragging of the nav and the tapping of elements.
 
     // Bind the listener methods to the class instance
     this.onPointerMove = this.onPointerMove.bind(this);
@@ -405,6 +408,8 @@ class Navigation {
    * @return null
    */
   init() {
+    this.initialised = true;
+
     // Find all of the anchors within the nav element and create generic object
     // holders for them. 
     const els = this.nav.querySelectorAll('a');
@@ -429,13 +434,30 @@ class Navigation {
     window.addEventListener('resize', this.onResize);
   }
   
+  /**
+   * Initialises the Navigation item elements, initialising their canvas 
+   * renditions, their pixi sprites and initialising their interactivity.
+   *
+   * @public
+   * @return null
+   */
   makeNavItems() {
+    if(!this.initialised) return;
+
+    // Loop through the navItems object
     this.navItems.forEach((navItem, i) => {
+      // Make the nav element (the canvas rendition of the anchor) for this item.
       navItem.element = this.makeNavItem(navItem.title, navItem.link);
+
+      // Create the PIXI sprite from the canvas
       navItem.sprite = PIXI.Sprite.from(navItem.element);
+
+      // Turn the sprite into a button and initialise the various event listeners
       navItem.sprite.interactive = true;
       navItem.sprite.buttonMode = true;
       const filter = new HoverFilter();
+      // This provides a callback for focus on the root element, providing us with
+      // a way to cause navigation on tab.
       navItem.rootElement.addEventListener('focus', ()=> {
         this.focusNavItemByIndex(i);
         navItem.sprite.filters = [filter];
@@ -443,21 +465,41 @@ class Navigation {
       navItem.rootElement.addEventListener('blur', ()=> {
         navItem.sprite.filters = [];
       });
+      // on pointer over, add the filter
       navItem.sprite.on('pointerover', (e)=> {
         navItem.sprite.filters = [filter];
       });
+      // on pointer out remove the filter
       navItem.sprite.on('pointerout', (e)=> {
         navItem.sprite.filters = [];
       });
+      // On pointer up, if we're not dragging the navigation, execute a click on
+      // the root navigation element.
       navItem.sprite.on('pointerup', (e)=> {
         if(this.dragging) return;
+        // Create the click event and execute it on the root element (the anchor upon which this nav item is based).
         var event = document.createEvent('HTMLEvents');
         event.initEvent('click', true, false);
         navItem.rootElement.click();
       });
     });
   }
+  
+  /**
+   * Public methods
+   */
+
+  /**
+   * Initialises the Navigation item as a canvas element. This takes a string and renders it
+   * to the canvas using fillText. 
+   *
+   * @public
+   * @param {String} title      The text of the link element
+   * @return {Canvas}           The canvas alement that contains the text rendition of the link
+   */
   makeNavItem(title) {
+    if(!this.initialised) return;
+
     const c = document.createElement('canvas');
     const ctx = c.getContext('2d');
 
@@ -485,6 +527,8 @@ class Navigation {
    * @return null
    */
   setupWebGLContext() {
+    if(!this.initialised) return;
+
     // Create the pixi application, setting the background colour, width and
     // height and pixel resolution.
     this.app = new PIXI.Application({
@@ -533,9 +577,22 @@ class Navigation {
     this.nav.appendChild(this.app.view);                  // Append the canvas to the nav element
   }
   
+  /**
+   * Given a numeric index, this calculates the position of the 
+   * associated nav element within the application and simulates
+   * a mouse move to that position.
+   *
+   * @public
+   * @param {Number} index      The index of the navigation element to focus.
+   * @return null
+   */
   focusNavItemByIndex(index) {
+    if(!this.initialised) return;
+
     let c = 0;
     
+    // loop through the nav items and increment the position 
+    // until the required index is reached.
     this.navItems.forEach((item, i) => {
       let perWidth = item.element.width / this.navWidth;
       if(i < index) {
@@ -545,10 +602,24 @@ class Navigation {
       }
     });
     
+    // Calculate the mouse position.
     let mousepos = [window.innerWidth * .1 + (window.innerWidth*.8) * c, window.innerHeight * .5];
     this.mousepos = mousepos;
   }
   
+  /**
+   * Removes all of the event listeners and any association of
+   * the navigation object, preparing the instance for garbage
+   * collection.
+   * 
+   * This method is unused in this demo, but exists here to 
+   * provide somewhere for you to remove all remnents of the 
+   * instance from memory, if and when you might need to.
+   * 
+   *
+   * @public
+   * @return null
+   */
   deInit() {
     window.removeEventListener('pointermove', this.onPointerMove);
     window.removeEventListener('pointerdown', this.onPointerDown);
@@ -556,7 +627,19 @@ class Navigation {
     window.removeEventListener('resize', this.onResize);
   }
 
+  /**
+   * Redraws the background graphic and the container mask.
+   *
+   * @public
+   * @return null
+   */
   setupBackground() {
+    if(!this.initialised) return;
+
+    // The background graphic is just a matte that lives behind everything.
+    // If you wanted to you could apply a filter to this to create a pattern
+    // or animation in the background to the navigation. For the purposes
+    // of this demo, this is just a block of colour.
     this.background.clear();
     this.background.beginFill(this.backgroundColour, 0.);
     this.background.position.x = window.innerWidth * -.5;
@@ -564,6 +647,11 @@ class Navigation {
     this.background.drawRect(-this.maskpadding,-this.maskpadding, window.innerWidth+this.maskpadding, window.innerHeight+this.maskpadding);
     this.background.endFill();
     
+    // We mask the container so that the dimensions that PIXI provides to 
+    // our screen filter are predictable. If we don't do this, then the 
+    // behaviour of the shader becomes unpredictable and weird. The reason 
+    // that we pad the mask is so that we have a slightly larger than the
+    // screen area to play with within the shader.
     const mask = new PIXI.Graphics();
     mask.beginFill(this.backgroundColour, .5);
     mask.position.x = window.innerWidth * -.5;
@@ -572,32 +660,14 @@ class Navigation {
     mask.endFill();
     this.container.mask = mask;
   }
-  
-  onResize(e) {
-    this.app.renderer.resize(window.innerWidth, window.innerHeight);
-    this.app.stage.x = window.innerWidth * .5;
-    this.app.stage.y = window.innerHeight * .5;
 
-    this.setupBackground();
-  }
-  onPointerMove(e) {
-    if(this.dragging || e.pointerType === 'mouse') {
-      this.mousepos = [e.pageX, e.pageY];
-    }
-  }
-  onPointerDown(e) {
-    this.pointerdown = true;
-    setTimeout(()=> {
-      if(this.pointerdown === true) this.dragging = true;
-    }, 100);
-  }
-  onPointerUp(e) {
-    this.pointerdown = false;
-    setTimeout(()=> {
-      this.dragging = false;
-    }, 100);
-  }
-  
+  /**
+   * Coerces the mouse position as a vector with units in the 0-1 range
+   *
+   * @public
+   * @param {Array} mousepos_px      An array of the mouse's position on screen in pixels
+   * @return {Array}
+   */
   fixMousePos(mousepos_px) {
     let ratio = window.innerHeight / window.innerWidth;
     let mousepos = [];
@@ -611,23 +681,121 @@ class Navigation {
     return mousepos;
   }
 
+
+  
+  /**
+   * Event callbacks
+   */
+  
+  /**
+   * Responds to the window resize event, resizing the stage and redrawing 
+   * the background.
+   *
+   * @public
+   * @param {Object} e     The event object
+   * @return null
+   */
+  onResize(e) {
+    this.app.renderer.resize(window.innerWidth, window.innerHeight);
+    this.app.stage.x = window.innerWidth * .5;
+    this.app.stage.y = window.innerHeight * .5;
+
+    this.setupBackground();
+  }
+  
+  /**
+   * Responds to the window pointer move event, updating the application's mouse
+   * position.
+   *
+   * @public
+   * @param {Object} e     The event object
+   * @return null
+   */
+  onPointerMove(e) {
+    if(this.dragging || e.pointerType === 'mouse') {
+      this.mousepos = [e.pageX, e.pageY];
+    }
+  }
+  
+  /**
+   * Responds to the window pointer down event, creating a timeout that checks,
+   * after a short period of time, whether the pointer is still down, after 
+   * which it sets the dragging property to true.
+   *
+   * @public
+   * @param {Object} e     The event object
+   * @return null
+   */
+  onPointerDown(e) {
+    this.pointerdown = true;
+    setTimeout(()=> {
+      if(this.pointerdown === true) this.dragging = true;
+    }, 100);
+  }
+  
+  /**
+   * Responds to the window pointer up event, sets pointer down to false and,
+   * after a short time, sets dragging to false.
+   *
+   * @public
+   * @param {Object} e     The event object
+   * @return null
+   */
+  onPointerUp(e) {
+    this.pointerdown = false;
+    setTimeout(()=> {
+      this.dragging = false;
+    }, 100);
+  }
+
+
+  
+  /**
+   * Getters and setters (properties)
+   */
+
+  /**
+   * (getter/setter) The colour of the application background. This can take
+   * a number or an RGB hex string in the format of '#FFFFFF'. It stores
+   * the colour as a number
+   *
+   * @type {number/string}
+   * @default 0xF9F9F9
+   */
   set backgroundColour(value) {
+    // A regex that determines whether the passed string (if string it is)
+    // is in the required format.
     const colourval = /^#([0-9ABCDEF]{6,6})/i.exec(value);
     if(typeof(value) == 'string' && colourval != null) {
+      // If we have a string and it's in the right format, convert it to a numbe
       this._backgroundColour = `0x${colourval[1]}`*1;
     } else if(typeof(value) == 'number') {
+      // If it's a number, save it
       this._backgroundColour = value;
     }
+    // reset the background.
+    this.setupBackground();
   }
   get backgroundColour() {
     return this._backgroundColour || 0xF9F9F9;
   }
-  
+
+  /**
+   * (getter/setter) The position of the mouse/pointer on screen. This 
+   * updates the position of the navigation in response to the cursor
+   * and fixes the mouse position before passing it to the screen
+   * filter.
+   *
+   * @type {Array}
+   * @default [0,0]
+   */
   set mousepos(value) {
     
+    // Find the position of the container relating to the mouse and set it.
     const p = value[0] / window.innerWidth;
     this.container.position.x = -(this.navWidth * .5) + (1. - p) * this.navWidth;
     
+    // Fix the mouse position, save it and pass it onto the screen filter
     value = this.fixMousePos(value);
     if(value instanceof Array && value.length === 2 && !isNaN(value[0]) && !isNaN(value[1])) {
       this._mousepos = value;
@@ -638,6 +806,14 @@ class Navigation {
     return this._mousepos || [0,0];
   }
 
+  /**
+   * (getter/setter) The amount of padding at the edge of the screen. This
+   * is sort of an arbitrary value at the moment, so if you start to see 
+   * tearing at the edge of the text, make this value a little higher
+   *
+   * @type {Number}
+   * @default 100
+   */
   set maskpadding(value) {
     if(!isNaN(value)) this._maskpadding = value;
   }
@@ -647,9 +823,10 @@ class Navigation {
   }
 }
 
+// Create the navigation based on teh nav element
 const nav = new Navigation(document.querySelector('.main-nav'));
-window.nav = nav
 
+// Load the web font and, once it's loaded, initialise the nav.
 WebFont.load({
   google: {
     families: ['Abril Fatface']
