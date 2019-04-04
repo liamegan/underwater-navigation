@@ -332,6 +332,7 @@ class HoverFilter extends PIXI.Filter {
     // Create our noise
 
     float pattern = distortedFBM(vec3(uv, t));
+    pattern *= pattern * 1.2;
     // Create our base colour
     vec4 rtn = vec4( 0.145, 0.239, 0.357, 1. ); // dark blue
     // mux this colour with another based on the noise value
