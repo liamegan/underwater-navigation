@@ -834,6 +834,14 @@ class Navigation {
   }
 }
 
+document.addEventListener('keyup', (e) => {
+  if(e.target.className.indexOf('nav-toggle') && (e.keyCode === 13 || e.keyCode === 32)) {
+    document.getElementById('main-nav-toggle').toggleAttribute('checked');
+    // e.preventDefault();
+  }
+});
+document.getElementById('main-nav-toggle').toggleAttribute('checked');
+
 // Create the navigation based on teh nav element
 const nav = new Navigation(document.querySelector('.main-nav'));
 
