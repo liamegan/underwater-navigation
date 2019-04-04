@@ -5,25 +5,73 @@ if (window.NodeList && !NodeList.prototype.forEach) {
   NodeList.prototype.forEach = Array.prototype.forEach;
 }
 
+/**
+ * This class provides provides a filter that causes distortion
+ * based on a screen size and in relation to the user's cursor.
+ *
+ * @class ScreenFilter
+ * @augments PIXI.Filter
+ * @author Liam Egan <liam@wethecollective.com>
+ * @version 1.0.0
+ * @created Mar 20, 2019
+ */
 class ScreenFilter extends PIXI.Filter {
+
+  /**
+   * The Screenfilter constructor assembles all of the uniforms 
+   * and initialises the superclass.
+   *
+   * @constructor
+   * @param {Number} resolution         The resolution of the application, essentially the pixel depth
+   */
   constructor(resolution) {
+    // Construct the super class based on the default vertex shader and the fragment shader from the ScreenFilter
     super(PIXI.Filter.defaultVertexSrc, ScreenFilter.fragmentSrc);
+
     this.resolution = resolution;
+
+    // Set up the filter uniforms
     this.uniforms.time = 0;
     this.uniforms.mouse = [0,0];
     this.uniforms.u_resolution = [window.innerWidth*this.resolution,window.innerHeight*this.resolution];
     this.uniforms.ratio = this.uniforms.u_resolution[1] < this.uniforms.u_resolution[0] ? this.uniforms.u_resolution[0] / this.uniforms.u_resolution[1] : this.uniforms.u_resolution[1] / this.uniforms.u_resolution[0];
+
+    // This simply stops the filter from passing unexpected params to our shader
     this.autoFit = false;
     
+    // Bund our resize handler
     this.onResize = this.onResize.bind(this);
     window.addEventListener('resize', this.onResize);
   }
+
+  /**
+   * Reacts to the window resize event. Calculates the new size of the filter
+   *
+   * @public
+   * @return null
+   */
   onResize() {
     this.uniforms.u_resolution = [window.innerWidth*this.resolution,window.innerHeight*this.resolution];
     this.uniforms.ratio = this.uniforms.u_resolution[1] < this.uniforms.u_resolution[0] ? this.uniforms.u_resolution[0] / this.uniforms.u_resolution[1] : this.uniforms.u_resolution[1] / this.uniforms.u_resolution[0];
   }
+
+  /**
+   * (getter) The fragment shader for the screen filter
+   *
+   * @static
+   * @type {string}
+   */
   static get fragmentSrc() {
     return `
+  /*
+    Sceen distortion filter
+    -------------------
+    
+    This shader expects to operate on a screen sized container (essentailly the whole menu)
+    and take the output of the program and distort it in a radial pattern, applying some
+    bloomed blur and noisy waves toward the edge, centered on the mouse.
+
+  */  
   precision highp float;
   varying vec2 vTextureCoord;
 
@@ -39,10 +87,15 @@ class ScreenFilter extends PIXI.Filter {
 
   #define PI 3.14159265359
   
+  // Return a random number between 0 and 1 based on a vec2
   float rand(vec2 c){
 	  return fract(sin(dot(c.xy ,vec2(12.9898,78.233))) * 43758.5453);
   }
 
+  // This is sort of a cheap and dirty precursor to full on
+  // Perlin noise. We could have happily used a more expensive
+  // noise algorithm here, but this is more than sufficient 
+  // for our needs.
   float noise(vec2 p, float freq ){
     float unit = inputSize.x/freq;
     vec2 ij = floor(p/unit);
@@ -58,6 +111,7 @@ class ScreenFilter extends PIXI.Filter {
     return mix(x1, x2, xy.y);
   }
 
+  // Blur a texture based on a 7 sample laplacian
   vec4 blur13(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
     vec4 color = vec4(0.0);
     vec2 off1 = vec2(1.411764705882353) * direction;
@@ -74,41 +128,78 @@ class ScreenFilter extends PIXI.Filter {
   }
 
   void main(void){
+    // Generate our normalized, centered UV coordinates
     vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.x, u_resolution.y);
+    // Get the mouse coordinates in relation to the frament coords
     vec2 uvm = uv - mouse;
     uvm /= ratio;
+    // The radial mouse gradient. We use this to apply our blur
+    vec2 raidalmouse = smoothstep(.3, 2., abs(uvm) * 2.);
+
+    // Initialise our texture output
+    vec4 tex = vec4(0.);
+
+    // The centered texture coordinates
     vec2 textureCoord = vTextureCoord - .5;
+    // The polar texture coordinates
     vec2 polar = vec2(length(textureCoord), atan(textureCoord.y,textureCoord.x));
-    vec2 p = smoothstep(.3, 2., abs(uvm) * 2.);
+    // This distorts the texture in a wave pattern around our mouse position.
     polar.y += smoothstep(.1, 2., abs(uvm.x) * 2.);
+    // polar.y += smoothstep(.1, 2., abs(uvm.x) * 4.); // uncomment this to see the effects of ramping up the mouse vector
+    // This is just converting our polar texture coordinates back into cartesian coordinates
     textureCoord = vec2( cos(polar.y) * polar.x, sin(polar.y) * polar.x );
+
+    // This just increases the size of the text slightly as it gets further from the middle of the mouse position
+    // Essentially this is multiplying texture in the Y direction based on the distance from the centre of the mouse
     textureCoord.y *= 1. - abs(uvm.x * 1.5) * .3;
+    // textureCoord *= 1. - smoothstep(.2, .5, length(uvm)) * .3; // Uncomment this line to ramp up this effect
 
-    //textureCoord *= 1. - smoothstep(.2, .5, length(uvm)) * .3;
-
+    // Now, the good stuff!
+    // Add some noise to the texture coordinate  (with a time component, naturally) and 
+    // multiply the effect by a gradient centered on the mouse's position.
     textureCoord += noise(uv, 10000. + sin(time) * 5000.) * smoothstep(.15, 2., abs(uvm.x)) * .6;
+    // This just recenters the coordinate
     textureCoord += .5;
 
-    // vec4 tex = texture2D(uSampler, textureCoord);
-
-    vec4 tex = blur13(uSampler, textureCoord, u_resolution, vec2(p.x*10., 0.));
-    tex += blur13(uSampler, textureCoord, u_resolution, vec2(0., p.x*10.));
+    // Gather the blur samples build the texture
+    tex = blur13(uSampler, textureCoord, u_resolution, vec2(clamp(raidalmouse.x*20., 0., 5.), 0.));
+    tex += blur13(uSampler, textureCoord, u_resolution, vec2(0., clamp(raidalmouse.x*20., 0., 5.)));
     tex *= .5;
 
-    gl_FragColor = vec4(vec3(1. - smoothstep(.2, .25, length(uvm)) * .3), 1.);
-gl_FragColor = mix(gl_FragColor, tex, tex.a);
+    // If you want to get rid of the blur, use the below instead of the above, it will just spit out the 
+    // exact texture based on all of the above
+    // vec4 tex = texture2D(uSampler, textureCoord);
 
+    // assemble the colour based on the texture multiplied by a gradient of the mouse position - this 
+    // just fades the texture out at the edges
     gl_FragColor = tex * 1. - smoothstep(.5, 1.5, length(uvm)*2.);
+
+    // Uncomment the below to output the combination of the blurred, distorted texture and a gradient
+    // representing the mouse position
+    // gl_FragColor = vec4(vec3(1. - smoothstep(.2, .25, length(uvm)) * .3), 1.);
+    // gl_FragColor = mix(gl_FragColor, tex, tex.a);
   }
 `;
   }
-  apply(filterManager, input, output)
-  {
-    this.uniforms.time += .01;
 
+  /**
+   * Override the parent apply method so that we can increment the time uniform for
+   * the purpose of supplying a time component to the shader.
+   */
+  apply(filterManager, input, output) {
+    // Increment the time uniform
+    this.uniforms.time += .01;
+    // Apply the filter.
     filterManager.applyFilter(this, input, output);
   }
   
+  /**
+   * (getter/setter) The mouse position. Setting this will update the mouse
+   * uniform that's supplied to the shader.
+   *
+   * @type {array}
+   * @default [0,0]
+   */
   set mousepos(value) {
     if(value instanceof Array && value.length === 2 && !isNaN(value[0]) && !isNaN(value[1])) {
       this._mousepos = value;
@@ -120,13 +211,49 @@ gl_FragColor = mix(gl_FragColor, tex, tex.a);
   }
 }
 
+/**
+ * This class provides provides a filter that provides the hover
+ * styles to the buttoms. Essentially this is just supplying some
+ * basic noise on hover now, but it could really do anything a 
+ * fragment shader can do.
+ *
+ * @class HoverFilter
+ * @augments PIXI.Filter
+ * @author Liam Egan <liam@wethecollective.com>
+ * @version 1.0.0
+ * @created Mar 20, 2019
+ */
 class HoverFilter extends PIXI.Filter {
+
+  /**
+   * The HoverFilter constructor assembles all of the uniforms 
+   * and initialises the superclass.
+   *
+   * @constructor
+   */
   constructor() {
     super(PIXI.Filter.defaultVertexSrc, HoverFilter.fragmentSrc);
     this.uniforms.time = 0;
   }
+
+  /**
+   * (getter) The fragment shader for the screen filter
+   *
+   * @static
+   * @type {string}
+   */
   static get fragmentSrc() {
     return `
+  /*
+    Hover filter
+    -------------------
+    
+    This shader expects to operate on a display object within a pixi application.
+    It takes the output of the display object and applies some noise to it based
+    on the objects alpha channel, in this way clamping the colour to the bounts
+    of the text that makes up the button
+
+  */  
   precision highp float;
   varying vec2 vTextureCoord;
 
@@ -139,38 +266,17 @@ class HoverFilter extends PIXI.Filter {
 
   #define PI 3.14159265359
   
+  // Return a random number between 0 and 1 based on a vec2
   float rand(vec2 c){
 	  return fract(sin(dot(c.xy ,vec2(12.9898,78.233))) * 43758.5453);
   }
 
-  // Courtesy Robert Penner
-  // t: current time, b: begInnIng value, c: change In value, d: duration
-  float easeOutElastic(in float t, in float b, in float c, in float d) {
-      float s=1.70158;
-      float p=0.0;
-      float a=c;
-      if (t==0.0) {
-        return b;
-      }
-      if ((t/=d)==1.0) {
-          return b+c;
-      }
-      if (p == .0) {
-          p=d*.3;
-      }
-      if (a < abs(c)) {
-          a=c;
-          s=p/4.0;
-      } else {
-          s = p/(2.0*PI) * asin(c/a);
-      }
-      return a*pow(2.0,-10.0*t) * sin( (t*d-s)*(2.0*PI)/p ) + c + b;
-  }
+  // Some FBM noise based on a value component
+  // see https://thebookofshaders.com/13/ for more details
   #define NUM_OCTAVES 3
   float mod289(float x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
   vec4 mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
   vec4 perm(vec4 x){return mod289(((x * 34.0) + 1.0) * x);}
-
   float noise(vec3 p){
       vec3 a = floor(p);
       vec3 d = p - a;
@@ -192,7 +298,6 @@ class HoverFilter extends PIXI.Filter {
 
       return o4.y * d.y + o4.x * (1.0 - d.y);
   }
-
   float fbm(vec3 x) {
     float v = 0.0;
     float a = 0.5;
@@ -205,67 +310,42 @@ class HoverFilter extends PIXI.Filter {
     return v;
   }
 
+  // Create a pattern based on a normalised uv coordinate. In this
+  // example we're making some noise and setting a couple of colours,
+  // but you could make this any sort of pattern
   vec4 pattern(vec2 uv) {
+
+    // Increasing the frequency of the noise
     uv *= 3.;
+    // modify our time component, making it faster
     float t = time*2.;
-    float modt = mod(t, 10.);
 
-      float pattern = fbm(vec3(uv, t));
-      vec4 rtn = vec4( 0.776, 0.529, 0.561, 1. );
-      rtn = vec4( 0.145, 0.239, 0.357, 1. );
-      // rtn = mix(rtn, vec4( 0.145, 0.239, 0.357, 1. ), smoothstep(.2, .3, pattern));
-      rtn = mix(rtn, vec4( 0.88, 0.88, 0.88, 1. ), smoothstep(.0, 1., pattern));
-      return rtn;
-
-    if(modt < 2.5) {
-    
-      float pattern = fbm(vec3(uv, t));
-      vec4 rtn = vec4( 0.776, 0.529, 0.561, 1. );
-      rtn = mix(rtn, vec4( 0.145, 0.239, 0.357, 1. ), smoothstep(.2, .3, pattern));
-      rtn = mix(rtn, vec4( 0.588, 0.588, 0.588, 1. ), smoothstep(.4, .5, pattern));
-      return rtn;
-  } else if(modt < 5.) {
-      if( mod(floor(t), 2.0) == 0.0 ) {
-          float change = (-1.0 + mod(ceil(uv.y), 2.0) * 2.0);
-          uv.x += easeOutElastic(fract(t), .0, change, 2.0);
-      } else {
-          float change = (-1.0 + mod(ceil(uv.x), 2.0) * 2.0);
-          uv.y += easeOutElastic(fract(t), .0, change, 2.0);
-      }
-
-      uv = fract(uv)-.5;
-      float pattern = smoothstep(.3, .4, length(uv));
-      vec4 rtn = vec4( 0.776, 0.529, 0.561, 1. );
-      rtn = mix(rtn, vec4( 0.145, 0.239, 0.357, 1. ), pattern);
-      return rtn;
-    } else {
-      vec3 c1 = vec3( 0.776, 0.529, 0.561 ); // C6878F
-      vec3 c2 = vec3( 0.718, 0.616, 0.58 ); // B79D94
-      vec3 c3 = vec3( 0.588, 0.588, 0.588 ); // 969696
-      vec3 c4 = vec3( 0.145, 0.239, 0.357 ); // 253D5B
-
-      uv *= .4;
-      uv.x -= t;
-      uv *= mat2(0.86602529158, -0.50000019433, 0.50000019433, 0.86602529158);
-      uv.x = fract(uv.x);
-      
-      vec4 rtn = vec4(c1, 1.);
-      rtn = mix(rtn, vec4(c2, 1.), smoothstep(.25,.26,uv.x));
-      rtn = mix(rtn, vec4(c3, 1.), smoothstep(.5,.51,uv.x));
-      rtn = mix(rtn, vec4(c4, 1.), smoothstep(.75,.76,uv.x));
-      return rtn;
-    }
+    // Create our noise
+    float pattern = fbm(vec3(uv, t));
+    // Create our base colour
+    vec4 rtn = vec4( 0.145, 0.239, 0.357, 1. ); // dark blue
+    // mux this colour with another based on the noise value
+    rtn = mix(rtn, vec4( 0.88, 0.88, 0.88, 1. ), smoothstep(.0, 1., pattern)); // sort of a light light grey colour
+    return rtn;
     
   }
 
   void main(void){
+    // Generate our normalized, centered UV coordinates
     vec2 uv = (gl_FragCoord.xy - 0.5 * inputSize.xy) / min(inputSize.x, inputSize.y);
+    // Get the base texture - this is the display object from pixi
     vec4 tex = texture2D(uSampler, vTextureCoord);
 
+    // output the pattern constrained by the texture's alpha
     gl_FragColor = vec4((tex.a) * pattern(uv));
   }
 `;
   }
+
+  /**
+   * Override the parent apply method so that we can increment the time uniform for
+   * the purpose of supplying a time component to the shader.
+   */
   apply(filterManager, input, output)
   {
     this.uniforms.time += .01;
@@ -274,6 +354,16 @@ class HoverFilter extends PIXI.Filter {
   }
 }
 
+/**
+ * This class provides provides a filter that causes distortion
+ * based on a screen size and in relation to the user's cursor.
+ *
+ * @class ScreenFilter
+ * @augments PIXI.Filter
+ * @author Liam Egan <liam@wethecollective.com>
+ * @version 1.0.0
+ * @created Mar 20, 2019
+ */
 class Navigation {
   constructor(nav) {
     this.nav = nav;
