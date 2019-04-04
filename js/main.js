@@ -355,118 +355,78 @@ class HoverFilter extends PIXI.Filter {
 }
 
 /**
- * This class provides provides a filter that causes distortion
- * based on a screen size and in relation to the user's cursor.
+ * This class provides encapsulates the navigation as a whole. It is provided the base
+ * navigation element which it reads and recreates in the Pixi application
  *
- * @class ScreenFilter
- * @augments PIXI.Filter
+ * @class Navigation
  * @author Liam Egan <liam@wethecollective.com>
  * @version 1.0.0
  * @created Mar 20, 2019
  */
 class Navigation {
+
+  /**
+   * The Navigation constructor saves the navigation element and binds all of the 
+   * basic listener methods for the class.
+   * 
+   * The provided nav element should serve as both a container to the pixi canvas
+   * as well as containing the links that will become the navigation. It's important
+   * to understand that any elements within the navigation element that might appear
+   * will be covered by the application canvas, so it should serve only as a 
+   * container for the navigation links and the application canvas.
+   *
+   * @constructor
+   * @param {HTMLElement} nav         The navigation container.
+   */
   constructor(nav) {
+    // Save the nav
     this.nav = nav;
-    
+
+    // Set up the basic object property requirements.
+    this.navItems = [];         // This will contain the generic nav item objects
+    this.app = null;            // The PIXI application
+    this.container = null;      // The PIXI container element that will contain the nav elements
+    this.screenFilter = null;   // The screen filter to be appliced to the container
+    this.navWidth = null;       // The full width of the navigation
+    this.background = null;     // The container for the background graphic
+
+    // Bind the listener methods to the class instance
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onPointerDown = this.onPointerDown.bind(this);
     this.onPointerUp = this.onPointerUp.bind(this);
     this.onResize = this.onResize.bind(this);
   }
   
-  setupWebGLContext() {
-    this.app = new PIXI.Application({
-      backgroundColor: 0xFFFFFF,
-      width: window.innerWidth,
-      height: window.innerHeight,
-      resolution: 2
-    });
-    this.app.stage.x = window.innerWidth * .5;
-    this.app.stage.y = window.innerHeight * .5;
-    
-    this.container = new PIXI.Container();
-    this.screenFilter = new ScreenFilter(2);
-    this.app.stage.filters = [this.screenFilter];
-    
-    let ipos = 0;
-    this.navWidth = 0;
-    this.navItems.forEach((item) => {
-      this.navWidth += item.sprite.width;
-    });
-    this.navItems.forEach((item) => {
-      item.sprite.x = this.navWidth * -.5 + ipos;
-      ipos += item.sprite.width;
-      this.container.addChild(item.sprite);
-    });
-    
-    this.background = new PIXI.Graphics();
-    this.background.beginFill(0xFFFFFF, 0.);
-    this.background.position.x = window.innerWidth * -.5;
-    this.background.position.y = window.innerHeight * -.5;
-    this.background.drawRect(-this.maskpadding,-this.maskpadding, window.innerWidth+this.maskpadding, window.innerHeight+this.maskpadding);
-    this.background.endFill();
-    this.app.stage.addChild(this.background);
-    this.app.stage.addChild(this.container);
-    
-    const mask = new PIXI.Graphics();
-    mask.beginFill(0xFFFFFF, .5);
-    mask.position.x = window.innerWidth * -.5;
-    mask.position.y = window.innerHeight * -.5;
-    mask.drawRect(-this.maskpadding,-this.maskpadding, window.innerWidth+this.maskpadding, window.innerHeight+this.maskpadding);
-    mask.endFill();
-    this.container.mask = mask;
-
-    this.app.view.setAttribute('aria-hidden', 'true');
-    this.app.view.setAttribute('tab-index', '-1');
-    this.app.view.className = 'main-nav__canvas';
-    this.nav.appendChild(this.app.view);
-  }
-  
+  /**
+   * Initialises the navigation. Creates the navigation items, sets up the pixi 
+   * application, and binds the various listeners.
+   *
+   * @public
+   * @return null
+   */
   init() {
+    // Find all of the anchors within the nav element and create generic object
+    // holders for them. 
     const els = this.nav.querySelectorAll('a');
-    
-    this.navItems = [];
-    
     els.forEach((el) => {
       this.navItems.push({
-        rootElement:  el,
-        title:        el.innerText,
-        element:      null,
-        sprite:       null,
-        link:         el.href
+        rootElement:  el,             // The anchor element upon which this nav item is based
+        title:        el.innerText,   // The text of the nav item
+        element:      null,           // This will be a canvas representation of the nav item
+        sprite:       null,           // The PIXI.Sprite element that will be appended to stage
+        link:         el.href         // The link's href. This will be used when clicking on the button within the nav
       });
     });
     
-    this.makeNavItems();
-    this.setupWebGLContext();
+    // Set up the various requirements
+    this.makeNavItems();              // Set up the nav items
+    this.setupWebGLContext();         // Set up the pixi application and append it to the document
     
+    // Bind the various listener methods to their appropriate listeners
     window.addEventListener('pointermove', this.onPointerMove);
     window.addEventListener('pointerdown', this.onPointerDown);
     window.addEventListener('pointerup', this.onPointerUp);
     window.addEventListener('resize', this.onResize);
-  }
-  
-  focusNavItemByIndex(index) {
-    let c = 0;
-    
-    this.navItems.forEach((item, i) => {
-      let perWidth = item.element.width / this.navWidth;
-      if(i < index) {
-        c += perWidth;
-      } else if(i === index) {
-        c += perWidth * .5;
-      }
-    });
-    
-    let mousepos = [window.innerWidth * .1 + (window.innerWidth*.8) * c, window.innerHeight * .5];
-    this.mousepos = mousepos;
-  }
-  
-  deInit() {
-    window.removeEventListener('pointermove', this.onPointerMove);
-    window.removeEventListener('pointerdown', this.onPointerDown);
-    window.removeEventListener('pointerup', this.onPointerUp);
-    window.removeEventListener('resize', this.onResize);
   }
   
   makeNavItems() {
@@ -518,25 +478,107 @@ class Navigation {
     return c;
   }
   
-  onResize(e) {
-    this.app.renderer.resize(window.innerWidth, window.innerHeight);
+  /**
+   * Initialises the PIXI application and appends it to the nav element
+   *
+   * @public
+   * @return null
+   */
+  setupWebGLContext() {
+    // Create the pixi application, setting the background colour, width and
+    // height and pixel resolution.
+    this.app = new PIXI.Application({
+      backgroundColor: this.backgroundColour,
+      width: window.innerWidth,
+      height: window.innerHeight,
+      resolution: 2
+    });
+    // Ofsetting the stage to the middle of the page. I find it easier to 
+    // position things to a point in the middle of the window, so I do this
+    // but you might find it easier to position to the top left.
     this.app.stage.x = window.innerWidth * .5;
     this.app.stage.y = window.innerHeight * .5;
     
+    // Create the container and apply the screen filter to it.
+    this.container = new PIXI.Container();
+    this.screenFilter = new ScreenFilter(2);
+    this.app.stage.filters = [this.screenFilter];
+    
+    // Measure what will be the full pixel width of the navigation 
+    // Then loop through the nav elements and append them to the containter
+    let ipos = 0;                                 // The tracked position for each element in the navigation
+    this.navWidth = 0;                            // The full width of the navigation
+    this.navItems.forEach((item) => {
+      this.navWidth += item.sprite.width;
+    });
+    this.navItems.forEach((item) => {
+      item.sprite.x = this.navWidth * -.5 + ipos; // Calculate the position of the nav element to the nav width
+      ipos += item.sprite.width;                  // update the ipos
+      this.container.addChild(item.sprite);       // Add the sprite to the container
+    });
+    
+    // Create the background graphic 
+    this.background = new PIXI.Graphics();
+    this.setupBackground();
+
+    // Add the background and the container to the stage
+    this.app.stage.addChild(this.background);
+    this.app.stage.addChild(this.container);
+
+    // Set the various necessary attributes and class for the canvas 
+    // elmenent and append it to the nav element.
+    this.app.view.setAttribute('aria-hidden', 'true');    // This just hides the element from the document reader (for sight-impaired people)
+    this.app.view.setAttribute('tab-index', '-1');        // This takes the canvas element out of tab order completely (tabbing will be handled programatically using the actual links)
+    this.app.view.className = 'main-nav__canvas';         // Add the class name
+    this.nav.appendChild(this.app.view);                  // Append the canvas to the nav element
+  }
+  
+  focusNavItemByIndex(index) {
+    let c = 0;
+    
+    this.navItems.forEach((item, i) => {
+      let perWidth = item.element.width / this.navWidth;
+      if(i < index) {
+        c += perWidth;
+      } else if(i === index) {
+        c += perWidth * .5;
+      }
+    });
+    
+    let mousepos = [window.innerWidth * .1 + (window.innerWidth*.8) * c, window.innerHeight * .5];
+    this.mousepos = mousepos;
+  }
+  
+  deInit() {
+    window.removeEventListener('pointermove', this.onPointerMove);
+    window.removeEventListener('pointerdown', this.onPointerDown);
+    window.removeEventListener('pointerup', this.onPointerUp);
+    window.removeEventListener('resize', this.onResize);
+  }
+
+  setupBackground() {
     this.background.clear();
-    this.background.beginFill(0xFFFFFF, 0.);
+    this.background.beginFill(this.backgroundColour, 0.);
     this.background.position.x = window.innerWidth * -.5;
     this.background.position.y = window.innerHeight * -.5;
     this.background.drawRect(-this.maskpadding,-this.maskpadding, window.innerWidth+this.maskpadding, window.innerHeight+this.maskpadding);
     this.background.endFill();
     
     const mask = new PIXI.Graphics();
-    mask.beginFill(0xFFFFFF, .5);
+    mask.beginFill(this.backgroundColour, .5);
     mask.position.x = window.innerWidth * -.5;
     mask.position.y = window.innerHeight * -.5;
     mask.drawRect(-this.maskpadding,-this.maskpadding, window.innerWidth+this.maskpadding, window.innerHeight+this.maskpadding);
     mask.endFill();
     this.container.mask = mask;
+  }
+  
+  onResize(e) {
+    this.app.renderer.resize(window.innerWidth, window.innerHeight);
+    this.app.stage.x = window.innerWidth * .5;
+    this.app.stage.y = window.innerHeight * .5;
+
+    this.setupBackground();
   }
   onPointerMove(e) {
     if(this.dragging || e.pointerType === 'mouse') {
@@ -567,6 +609,18 @@ class Navigation {
       mousepos[1] = (mousepos_px[1] - window.innerHeight / 2) / window.innerHeight * -1;
     }
     return mousepos;
+  }
+
+  set backgroundColour(value) {
+    const colourval = /^#([0-9ABCDEF]{6,6})/i.exec(value);
+    if(typeof(value) == 'string' && colourval != null) {
+      this._backgroundColour = `0x${colourval[1]}`*1;
+    } else if(typeof(value) == 'number') {
+      this._backgroundColour = value;
+    }
+  }
+  get backgroundColour() {
+    return this._backgroundColour || 0xF9F9F9;
   }
   
   set mousepos(value) {
