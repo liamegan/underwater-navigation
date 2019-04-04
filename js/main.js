@@ -112,6 +112,7 @@ class ScreenFilter extends PIXI.Filter {
   }
 
   // Blur a texture based on a 7 sample laplacian
+  // Fast gaussien blur - https://github.com/Jam3/glsl-fast-gaussian-blur
   vec4 blur13(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
     vec4 color = vec4(0.0);
     vec2 off1 = vec2(1.411764705882353) * direction;
