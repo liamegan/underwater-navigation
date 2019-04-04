@@ -310,22 +310,32 @@ class HoverFilter extends PIXI.Filter {
     return v;
   }
 
+  float distortedFBM(in vec3 x) {
+    float t = fbm(x);
+    x.xy += (t -.5);
+    t *= fbm(x);
+    x.xy += (t -.5) * .6;
+    t = fbm(x);
+    return t;
+  }
+
   // Create a pattern based on a normalised uv coordinate. In this
   // example we're making some noise and setting a couple of colours,
   // but you could make this any sort of pattern
   vec4 pattern(vec2 uv) {
 
     // Increasing the frequency of the noise
-    uv *= 3.;
+    uv *= 4.;
     // modify our time component, making it faster
     float t = time*2.;
 
     // Create our noise
-    float pattern = fbm(vec3(uv, t));
+
+    float pattern = distortedFBM(vec3(uv, t));
     // Create our base colour
     vec4 rtn = vec4( 0.145, 0.239, 0.357, 1. ); // dark blue
     // mux this colour with another based on the noise value
-    rtn = mix(rtn, vec4( 0.88, 0.88, 0.88, 1. ), smoothstep(.0, 1., pattern)); // sort of a light light grey colour
+    rtn = mix(rtn, vec4( 1. ), smoothstep(.0, 1., pattern)); // sort of a light light grey colour
     return rtn;
     
   }
