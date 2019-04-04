@@ -488,9 +488,6 @@ class Navigation {
       // the root navigation element.
       navItem.sprite.on('pointerup', (e)=> {
         if(this.dragging) return;
-        // Create the click event and execute it on the root element (the anchor upon which this nav item is based).
-        var event = document.createEvent('HTMLEvents');
-        event.initEvent('click', true, false);
         navItem.rootElement.click();
       });
     });
@@ -741,7 +738,7 @@ class Navigation {
     this.pointerdown = true;
     setTimeout(()=> {
       if(this.pointerdown === true) this.dragging = true;
-    }, 100);
+    }, 300);
   }
   
   /**
@@ -756,7 +753,7 @@ class Navigation {
     this.pointerdown = false;
     setTimeout(()=> {
       this.dragging = false;
-    }, 100);
+    }, 300);
   }
 
 
@@ -834,6 +831,8 @@ class Navigation {
   }
 }
 
+// Set up the keyup listener on the nav toggle elements. This just makes sure 
+// that these labels work as expected for keyboard users
 document.addEventListener('keyup', (e) => {
   if(e.target.className.indexOf('nav-toggle') && (e.keyCode === 13 || e.keyCode === 32)) {
     document.getElementById('main-nav-toggle').toggleAttribute('checked');
