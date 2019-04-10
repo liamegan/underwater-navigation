@@ -509,17 +509,21 @@ class Navigation {
   makeNavItem(title) {
     if(!this.initialised) return;
 
+    // Create an offscreen canvas and context
     const c = document.createElement('canvas');
     const ctx = c.getContext('2d');
 
+    // Set up our font
     const font = 'Abril Fatface';
     const fontSize = 80;
 
-    ctx.font = `${fontSize}px ${font}`; // This is here purely to run the measurements
+    ctx.font = `${fontSize}px ${font}`;
 
+    // Make our canvas the size of the text  with a padding of 50px
     c.width = ctx.measureText(title).width + 50;
     c.height = fontSize*1.5;
 
+    // Draw the text into the canvas
     ctx.font = `${fontSize}px ${font}`;
     ctx.textAlign="center";
     ctx.textBaseline="bottom"; 
