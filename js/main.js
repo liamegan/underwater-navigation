@@ -177,8 +177,12 @@ class ScreenFilter extends PIXI.Filter {
 
     // Uncomment the below to output the combination of the blurred, distorted texture and a gradient
     // representing the mouse position
+    textureCoord -= .5;
+    textureCoord *= textureCoord;
+    vec2 r = vec2(length(textureCoord), atan(textureCoord.y, textureCoord.x));
+    gl_FragColor = vec4(vec3(0., (sin(r * 10.) * .2 + .2) * r.x * 4. + vec2(.1, .3)), 1.);
     // gl_FragColor = vec4(vec3(1. - smoothstep(.2, .25, length(uvm)) * .3), 1.);
-    // gl_FragColor = mix(gl_FragColor, tex, tex.a);
+    gl_FragColor = mix(gl_FragColor, tex, tex.a);
   }
 `;
   }
@@ -803,7 +807,7 @@ class Navigation {
    */
   onOpen() {
     this.animatingPointer = true;
-    this.focusNavItemByIndex(0);
+    // this.focusNavItemByIndex(0);
     this.targetMousePos = this.unfixMousePos(this.mousepos);
     this.mousepos = [3000, window.innerHeight*.5];
   }
