@@ -18,6 +18,8 @@ label:focus {
 }
 #main-nav-toggle:checked ~ nav.main-nav {
   display: flex;
+  opacity: 1;
+  pointer-events: all;
 }
 
 .main-nav__canvas {
@@ -25,13 +27,16 @@ label:focus {
 }
 
 nav.main-nav {
+  transition: .5s linear opacity;
   align-items: center;
   background: #FFF;
   font-family: 'Abril Fatface';
   justify-content: center;
-  display: none;
+  display: flex;
   height: 100%;
   left: 0px;
+  opacity: 0;
+  pointer-events: none;
   position: fixed;
   top: 0px;
   width: 100%;
