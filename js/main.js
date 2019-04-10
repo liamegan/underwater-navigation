@@ -404,12 +404,15 @@ class Navigation {
     this.background = null;     // The container for the background graphic
     this.pointerdown = false;   // Indicates whether the user's pointer is currently down on the page
     this.dragging = false;      // Indicates whether the nav is currently being dragged. This is here to allow for both the dragging of the nav and the tapping of elements.
+    this.targetMousePos = [0,0]; // The targetMousePos is used for animating the mouse position
 
     // Bind the listener methods to the class instance
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onPointerDown = this.onPointerDown.bind(this);
     this.onPointerUp = this.onPointerUp.bind(this);
     this.onResize = this.onResize.bind(this);
+    this.onOpen = this.onOpen.bind(this);
+    this.animate = this.animate.bind(this);
   }
   
   /**
@@ -444,6 +447,7 @@ class Navigation {
     window.addEventListener('pointerdown', this.onPointerDown);
     window.addEventListener('pointerup', this.onPointerUp);
     window.addEventListener('resize', this.onResize);
+    window.addEventListener('navOpen', this.onOpen);
   }
   
   /**
@@ -694,6 +698,28 @@ class Navigation {
     return mousepos;
   }
 
+  /**
+   * Coerces the mouse position from a vector with units in the 0-1 range
+   * to screen coordinates
+   *
+   * @public
+   * @param {Array} mousepos      An array of the mouse's position on screen the 0-1 range
+   * @return {Array}
+   */
+  unfixMousePos(mousepos) {
+    let ratio = window.innerHeight / window.innerWidth;
+    let mousepos_px = [];
+    if(window.innerHeight > window.innerWidth) {
+      mousepos_px[0] = mousepos[0] * window.innerWidth + (window.innerWidth / 2);
+      mousepos_px[1] = mousepos[1] * window.innerHeight / -1 / ratio + (window.innerHeight / 2);
+    } else {
+      mousepos_px[0] = mousepos[0] * window.innerWidth * ratio + (window.innerWidth / 2);
+      mousepos_px[1] = mousepos[1] * window.innerHeight / -1 + (window.innerHeight / 2);
+    }
+    
+    return mousepos_px;
+  }
+
 
   
   /**
@@ -725,6 +751,12 @@ class Navigation {
    * @return null
    */
   onPointerMove(e) {
+    if(this.animatingPointer === true) {
+      if(this.dragging || e.pointerType === 'mouse') {
+        this.targetMousePos = [e.pageX, e.pageY];
+      }
+      return;
+    }
     if(this.dragging || e.pointerType === 'mouse') {
       this.mousepos = [e.pageX, e.pageY];
     }
@@ -760,8 +792,42 @@ class Navigation {
       this.dragging = false;
     }, 300);
   }
-
-
+  
+  /**
+   * Responds to the custom navOpen event fired when the navigation is opened.
+   * This listener doesn't do anything mission critical, so it can be skipped.
+   *
+   * @public
+   * @param {Object} e     The event object
+   * @return null
+   */
+  onOpen() {
+    this.animatingPointer = true;
+    this.focusNavItemByIndex(0);
+    this.targetMousePos = this.unfixMousePos(this.mousepos);
+    this.mousepos = [3000, window.innerHeight*.5];
+  }
+  
+  /**
+   * Responds to request animation frame. Responsible for rendering any 
+   * animation events
+   *
+   * @public
+   * @param {Number} delta  The time variable, provided by RaF
+   * @return null
+   */
+  animate(delta) {
+    if(this.animatingPointer === true) requestAnimationFrame(this.animate);
+    const pxMousepos = this.unfixMousePos(this.mousepos);
+    const diff = [this.targetMousePos[0] - pxMousepos[0], this.targetMousePos[1] - pxMousepos[1]];
+    pxMousepos[0] += (diff[0]) * .05;
+    pxMousepos[1] += (diff[1]) * .05;
+    this.mousepos = pxMousepos;
+    const l = Math.sqrt((diff[0] * diff[0]) + (diff[1] * diff[1]));
+    if(l < 1) {
+      this.animatingPointer = false;
+    }
+  }
   
   /**
    * Getters and setters (properties)
@@ -791,6 +857,25 @@ class Navigation {
   }
   get backgroundColour() {
     return this._backgroundColour || 0xF9F9F9;
+  }
+
+  /**
+   * (getter/setter) A flag that specifies whether the simulation is 
+   * currently animating the mouse position. If this is set to true
+   * then the pointer listener will simply return.
+   *
+   * @type {bolean}
+   * @default false
+   */
+  set animatingPointer(value) {
+    const wasAnimating = this.animatingPointer;
+    this._animating = value === true;
+    if(wasAnimating === false && this.animatingPointer === true) {
+      requestAnimationFrame(this.animate);
+    }
+  }
+  get animatingPointer() {
+    return this._animating || false;
   }
 
   /**
@@ -836,18 +921,36 @@ class Navigation {
   }
 }
 
+// The nav toggle is the checkbox that determines the visibility of the main nav
+const navToggle = document.getElementById('main-nav-toggle');
 // Set up the keyup listener on the nav toggle elements. This just makes sure 
 // that these labels work as expected for keyboard users
 document.addEventListener('keyup', (e) => {
   if(e.target.className.indexOf('nav-toggle') && (e.keyCode === 13 || e.keyCode === 32)) {
-    document.getElementById('main-nav-toggle').toggleAttribute('checked');
+    toggle.toggleAttribute('checked');
     e.preventDefault();
   }
 });
 document.getElementById('main-nav-toggle').toggleAttribute('checked');
+// This listener exists to fire the open event which the nav listens to. This
+// Just spawns the open animation
+navToggle.addEventListener('change', (e) => {
+  if(e.target.checked) {
+    if (window.CustomEvent) {
+      var event = new CustomEvent('navOpen');
+    } else {
+      var event = document.createEvent('CustomEvent');
+      event.initCustomEvent('navOpen', true, true);
+    }
+    
+    window.dispatchEvent(event);
+  } 
+});
 
 // Create the navigation based on teh nav element
 const nav = new Navigation(document.querySelector('.main-nav'));
+
+window.navigation = nav;
 
 // Load the web font and, once it's loaded, initialise the nav.
 WebFont.load({
