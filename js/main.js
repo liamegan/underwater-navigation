@@ -412,6 +412,7 @@ class Navigation {
     this.onPointerUp = this.onPointerUp.bind(this);
     this.onResize = this.onResize.bind(this);
     this.onOpen = this.onOpen.bind(this);
+    this.onClose = this.onClose.bind(this);
     this.animate = this.animate.bind(this);
   }
   
@@ -448,6 +449,7 @@ class Navigation {
     window.addEventListener('pointerup', this.onPointerUp);
     window.addEventListener('resize', this.onResize);
     window.addEventListener('navOpen', this.onOpen);
+    window.addEventListener('navClose', this.onClose);
   }
   
   /**
@@ -795,7 +797,8 @@ class Navigation {
   
   /**
    * Responds to the custom navOpen event fired when the navigation is opened.
-   * This listener doesn't do anything mission critical, so it can be skipped.
+   * This listener doesn't do anything mission critical, so it can be skipped
+   * if necessary.
    *
    * @public
    * @param {Object} e     The event object
@@ -806,6 +809,16 @@ class Navigation {
     this.focusNavItemByIndex(0);
     this.targetMousePos = this.unfixMousePos(this.mousepos);
     this.mousepos = [3000, window.innerHeight*.5];
+  }
+  /**
+   * Responds to the custom navClosed event fired when the navigation is closed.
+   *
+   * @public
+   * @param {Object} e     The event object
+   * @return null
+   */
+  onClose() {
+    this.animatingPointer = false;
   }
   
   /**
@@ -823,10 +836,10 @@ class Navigation {
     pxMousepos[0] += (diff[0]) * .05;
     pxMousepos[1] += (diff[1]) * .05;
     this.mousepos = pxMousepos;
-    const l = Math.sqrt((diff[0] * diff[0]) + (diff[1] * diff[1]));
-    if(l < 1) {
-      this.animatingPointer = false;
-    }
+    // const l = Math.sqrt((diff[0] * diff[0]) + (diff[1] * diff[1]));
+    // if(l < 1) {
+    //   this.animatingPointer = false;
+    // }
   }
   
   /**
@@ -931,21 +944,27 @@ document.addEventListener('keyup', (e) => {
     e.preventDefault();
   }
 });
-document.getElementById('main-nav-toggle').toggleAttribute('checked');
 // This listener exists to fire the open event which the nav listens to. This
 // Just spawns the open animation
 navToggle.addEventListener('change', (e) => {
+  let eventName;
+  console.log(e.target.checked);
   if(e.target.checked) {
-    if (window.CustomEvent) {
-      var event = new CustomEvent('navOpen');
-    } else {
-      var event = document.createEvent('CustomEvent');
-      event.initCustomEvent('navOpen', true, true);
-    }
-    
-    window.dispatchEvent(event);
+    eventName = 'navOpen';
+  } else {
+    eventName = 'navClose';
   } 
+
+  if (window.CustomEvent) {
+    var event = new CustomEvent(eventName);
+  } else {
+    var event = document.createEvent('CustomEvent');
+    event.initCustomEvent(eventName, true, true);
+  }
+  
+  window.dispatchEvent(event);
 });
+navToggle.toggleAttribute('checked');
 
 // Create the navigation based on teh nav element
 const nav = new Navigation(document.querySelector('.main-nav'));
@@ -960,5 +979,9 @@ WebFont.load({
   active: () => {
     nav.init();
     nav.focusNavItemByIndex(0);
+    // trigger the checkbox change event to start up the animation
+    var event = document.createEvent('HTMLEvents');
+    event.initEvent('change', true, false);
+    navToggle.dispatchEvent(event);
   }
 });
