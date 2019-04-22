@@ -964,7 +964,7 @@ navToggle.addEventListener('change', (e) => {
   
   window.dispatchEvent(event);
 });
-navToggle.toggleAttribute('checked');
+navToggle.checked = true;
 
 // Create the navigation based on teh nav element
 const nav = new Navigation(document.querySelector('.main-nav'));
