@@ -1,6 +1,6 @@
 # Underwater Navigation
 
-An WebGL navigation that builds from any supplied HTML navigation, Liam Egan
+An WebGL navigation that builds from any supplied HTML navigation. By Liam Egan.
 
 ![Image Title](link)
 
@@ -13,6 +13,7 @@ An WebGL navigation that builds from any supplied HTML navigation, Liam Egan
 - [PixiJS](http://www.pixijs.com/) version 5-beta
 - [Perlin Noise](https://mrl.nyu.edu/~perlin/paper445.pdf) by Ken Perlin
 - [Fast Gaussian Blur](https://github.com/Jam3/glsl-fast-gaussian-blur)
+- [Web Font Loader](https://github.com/typekit/webfontloader) by Typekit
 - Font: [Abril Fatface](https://fonts.google.com/specimen/Abril+Fatface?selection.family=Abril+Fatface) by Typetogether (courtesy Google Fonts)
 - Inspired by: [Holidays Menu](https://dribbble.com/shots/5734493-Holidays-Menu) by BestServedBold
 

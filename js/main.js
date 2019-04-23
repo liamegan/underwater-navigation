@@ -156,20 +156,20 @@ class ScreenFilter extends PIXI.Filter {
     // textureCoord *= 1. - smoothstep(.2, .5, length(uvm)) * .3; // Uncomment this line to ramp up this effect
 
     // Now, the good stuff!
-    // Add some noise to the texture coordinate  (with a time component, naturally) and 
+    // Add some noise to the texture coordinate (with a time component, naturally) and 
     // multiply the effect by a gradient centered on the mouse's position.
     textureCoord += noise(uv, 10000. + sin(time) * 5000.) * smoothstep(.15, 2., abs(uvm.x)) * .6;
     // This just recenters the coordinate
     textureCoord += .5;
 
     // Gather the blur samples build the texture
-    tex = blur13(uSampler, textureCoord, u_resolution, vec2(clamp(raidalmouse.x*20., 0., 5.), 0.));
-    tex += blur13(uSampler, textureCoord, u_resolution, vec2(0., clamp(raidalmouse.x*20., 0., 5.)));
-    tex *= .5;
+    //tex = blur13(uSampler, textureCoord, u_resolution, vec2(clamp(raidalmouse.x*20., 0., 5.), 0.));
+    //tex += blur13(uSampler, textureCoord, u_resolution, vec2(0., clamp(raidalmouse.x*20., 0., 5.)));
+    //tex *= .5;
 
     // If you want to get rid of the blur, use the below instead of the above, it will just spit out the 
     // exact texture based on all of the above
-    // vec4 tex = texture2D(uSampler, textureCoord);
+    tex = texture2D(uSampler, textureCoord);
 
     // assemble the colour based on the texture multiplied by a gradient of the mouse position - this 
     // just fades the texture out at the edges
@@ -520,17 +520,18 @@ class Navigation {
     const ctx = c.getContext('2d');
 
     // Set up our font
-    const font = 'Abril Fatface';
+    const font = 'tenez';
     const fontSize = 80;
+    const fontWeight = 400;
 
-    ctx.font = `${fontSize}px ${font}`;
+    ctx.font = `${fontWeight} ${fontSize}px ${font}`;
 
     // Make our canvas the size of the text  with a padding of 50px
     c.width = ctx.measureText(title).width + 50;
     c.height = fontSize*1.5;
 
     // Draw the text into the canvas
-    ctx.font = `${fontSize}px ${font}`;
+    ctx.font = `${fontWeight} ${fontSize}px ${font}`;
     ctx.textAlign="center";
     ctx.textBaseline="bottom"; 
     ctx.fillStyle = "rgba(40,50,60,1)";
@@ -869,7 +870,7 @@ class Navigation {
     this.setupBackground();
   }
   get backgroundColour() {
-    return this._backgroundColour || 0xF9F9F9;
+    return this._backgroundColour || 0xc57942;
   }
 
   /**
@@ -964,7 +965,7 @@ navToggle.addEventListener('change', (e) => {
   
   window.dispatchEvent(event);
 });
-navToggle.checked = true;
+//navToggle.checked = true;
 
 // Create the navigation based on teh nav element
 const nav = new Navigation(document.querySelector('.main-nav'));
@@ -973,9 +974,12 @@ window.navigation = nav;
 
 // Load the web font and, once it's loaded, initialise the nav.
 WebFont.load({
-  google: {
-    families: ['Abril Fatface']
+  typekit: {
+    id: 'phg5cnq'
   },
+  /*google: {
+    families: ['Abril Fatface']
+  },*/
   active: () => {
     nav.init();
     nav.focusNavItemByIndex(0);

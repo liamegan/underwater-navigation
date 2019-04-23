@@ -5,10 +5,11 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Underwater Navigation | Codrops</title>
 		<meta name="description" content="A WebGL representation of a navigation that styles itself after the impression of being underwater." />
-		<meta name="author" content="Codrops" />
+		<meta name="author" content="Liam Egan for Codrops" />
 		<link rel="shortcut icon" href="favicon.ico">
+		<link rel="stylesheet" href="https://use.typekit.net/phg5cnq.css">
 		<link rel="stylesheet" type="text/css" href="css/base.css" />
-
+		<link rel="stylesheet" type="text/css" href="css/menu.css" />
 		<!-- Libraries -->
 		<script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
@@ -18,30 +19,66 @@
 		<!--script src="//tympanus.net/codrops/adpacks/analytics.js"></script-->
 	</head>
 	<body class="demo-1">
-		<label class="main-nav-open nav-toggle" for="main-nav-toggle" tabindex="0">
-			Menu
-		</label>
-		<input type="checkbox" id="main-nav-toggle" />
-		<nav class="main-nav">
-			<ul class="main-nav__fallback">
-				<li>
-					<a href="/">Home</a>
-				</li>
-				<li>
-					<a href="/about">About</a>
-				</li>
-				<li>
-					<a href="/work">Our Work</a>
-				</li>
-				<li>
-					<a href="/team">The Team</a>
-				</li>
-				<li>
-					<a href="/contact">Contact Us</a>
-				</li>
-			</ul>
-			<label class="main-nav__close nav-toggle" for="main-nav-toggle" tabindex="0" />
-		</nav>
+		<main>
+			<div class="frame">
+				<div class="frame__nav">
+					<label class="main-nav-open nav-toggle" for="main-nav-toggle" tabindex="0">Menu</label>
+					<input type="checkbox" id="main-nav-toggle" />
+					<nav class="main-nav">
+						<ul class="main-nav__fallback">
+							<li>
+								<a href="#home">Home</a>
+							</li>
+							<li>
+								<a href="#about">About</a>
+							</li>
+							<li>
+								<a href="#work">Our Work</a>
+							</li>
+							<li>
+								<a href="#team">The Team</a>
+							</li>
+							<li>
+								<a href="#contact">Contact Us</a>
+							</li>
+						</ul>
+						<label class="main-nav__close nav-toggle" for="main-nav-toggle" tabindex="0" />
+					</nav>
+				</div>
+				<div class="frame__title-wrap">
+					<h1 class="frame__title">Underwater Navigation</h1>
+					<span class="frame__info">Click on "Menu"</span>
+				</div>
+				<div class="frame__links">
+					<a href="">Previous Demo</a>
+					<a href="">Article</a>
+					<a href="">GitHub</a>
+				</div>
+			</div>
+			<div class="content">
+				<div class="content__title-wrap">
+					<span class="content__meta">April 2068</span>
+					<h2 class="content__title">Black Holes <br/>and Revelations</h2>
+				</div>
+				<div class="slideshow">
+					<figure class="slide slide--current">
+						<span class="slide__number">01</span>
+						<img class="slide__img" src="img/1.png" alt="A black image" />
+						<figcaption class="slide__caption">The last few nights he had had the most uncertain feelings about the sidewalk just around the corner here, moving in the starlight toward his house. <a href="#" class="slide__more">Read more</a></figcaption>
+					</figure>
+					<figure class="slide">
+						<span class="slide__number">02</span>
+						<img class="slide__img" src="img/2.png" alt="A black image" />
+						<figcaption class="slide__caption">The autumn leaves blew over the moonlit pavement in such a way as to make the girl who was moving there seem fixed to a sliding walk. <a href="#" class="slide__more">Read more</a></figcaption>
+					</figure>
+					<figure class="slide">
+						<span class="slide__number">03</span>
+						<img class="slide__img" src="img/3.png" alt="A black image" />
+						<figcaption class="slide__caption">They walked in the warm-cool blowing night on the silvered pavement and there was the faintest breath of fresh apricots and strawberries in the air. <a href="#" class="slide__more">Read more</a></figcaption>
+					</figure>
+				</div>
+			</div>
+		</main>
 		<script src="js/main.js"></script>
 	</body>
 </html>
