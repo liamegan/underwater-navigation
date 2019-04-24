@@ -941,7 +941,7 @@ const navToggle = document.getElementById('main-nav-toggle');
 // that these labels work as expected for keyboard users
 document.addEventListener('keyup', (e) => {
   if(e.target.className.indexOf('nav-toggle') && (e.keyCode === 13 || e.keyCode === 32)) {
-    toggle.toggleAttribute('checked');
+    navToggle.checked = !navToggle.checked;
     e.preventDefault();
   }
 });

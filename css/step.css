@@ -1,0 +1,109 @@
+body,
+html {
+	height: 100%;
+	margin: 0;
+	font-family: sans-serif;
+}
+
+body {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+label {
+	cursor: pointer;
+}
+
+label:focus {
+	border: 2px solid orange;
+}
+
+#main-nav-toggle {
+	position: absolute;
+	left: -999em;
+}
+
+#main-nav-toggle:checked~nav.main-nav {
+	display: flex;
+	opacity: 1;
+	pointer-events: all;
+}
+
+.main-nav__canvas {
+	display: none;
+}
+
+nav.main-nav {
+	transition: .5s linear opacity;
+	align-items: center;
+	background: #FFF;
+	font-family: "Abril Fatface", serif;
+	justify-content: center;
+	display: flex;
+	height: 100%;
+	left: 0px;
+	opacity: 0;
+	pointer-events: none;
+	position: fixed;
+	top: 0px;
+	width: 100%;
+	z-index: 1;
+}
+
+ul.main-nav__fallback {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	text-align: center;
+}
+
+ul.main-nav__fallback a {
+	color: #28323c;
+	font-size: 2em;
+	text-decoration: none;
+}
+
+@media only screen and (min-width: 40.063em) {
+	.main-nav__canvas {
+		display: block;
+		height: 100%;
+		left: 0px;
+		position: fixed;
+		top: 0px;
+		width: 100%;
+		z-index: 100;
+	}
+}
+
+.main-nav__close {
+	height: 32px;
+	opacity: .5;
+	position: fixed;
+	right: 20px;
+	top: 20px;
+	z-index: 101;
+	width: 32px;
+}
+
+.main-nav__close:hover {
+	opacity: 1;
+}
+
+.main-nav__close::before,
+.main-nav__close::after {
+	position: absolute;
+	left: 15px;
+	content: ' ';
+	height: 33px;
+	width: 5px;
+	background-color: #333;
+}
+
+.main-nav__close::before {
+	transform: rotate(45deg);
+}
+
+.main-nav__close::after {
+	transform: rotate(-45deg);
+}
