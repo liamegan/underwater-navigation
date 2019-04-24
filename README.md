@@ -2,7 +2,7 @@
 
 An WebGL navigation that builds from any supplied HTML navigation. By Liam Egan.
 
-![Image Title](link)
+![Underwater Navigation](https://tympanus.net/codrops/wp-content/uploads/2019/04/UnderwaterMenu_featured.jpg)
 
 [Article on Codrops](https://tympanus.net/codrops/?p=39952)
 
