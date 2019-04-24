@@ -22,7 +22,13 @@
 		<main>
 			<div class="frame">
 				<div class="frame__nav">
-					<label class="main-nav-open nav-toggle" for="main-nav-toggle" tabindex="0">Menu</label>
+					<label class="main-nav-open nav-toggle" for="main-nav-toggle" tabindex="0" aria-label="Menu">
+						<svg aria-hidden="true" width="28px" height="20px" viewBox="0 0 28 20">
+							<rect x="0" y="2" width="28" height="2"></rect>
+							<rect x="0" y="10" width="24" height="2"></rect>
+							<rect x="0" y="18" width="28" height="2"></rect>
+						</svg>
+					</label>
 					<input type="checkbox" id="main-nav-toggle" />
 					<nav class="main-nav">
 						<ul class="main-nav__fallback">
@@ -42,17 +48,21 @@
 								<a href="#contact">Contact Us</a>
 							</li>
 						</ul>
-						<label class="main-nav__close nav-toggle" for="main-nav-toggle" tabindex="0" />
+						<label class="main-nav__close nav-toggle" for="main-nav-toggle" tabindex="0" aria-label="Close menu">
+							<svg aria-hidden="true" width="24" height="22px" viewBox="0 0 24 22">
+								<path d="M11 9.586L20.192.393l1.415 1.415L12.414 11l9.193 9.192-1.415 1.415L11 12.414l-9.192 9.193-1.415-1.415L9.586 11 .393 1.808 1.808.393 11 9.586z">
+							</svg>
+						</label>
 					</nav>
 				</div>
 				<div class="frame__title-wrap">
 					<h1 class="frame__title">Underwater Navigation</h1>
-					<span class="frame__info">Click on "Menu"</span>
+					<span class="frame__info">Click on the menu icon</span>
 				</div>
 				<div class="frame__links">
-					<a href="">Previous Demo</a>
-					<a href="">Article</a>
-					<a href="">GitHub</a>
+					<a href="https://tympanus.net/Tutorials/RotatedRevealers/">Previous Demo</a>
+					<a href="https://tympanus.net/codrops/?p=39952">Article</a>
+					<a href="https://github.com/liamegan/underwater-navigation">GitHub</a>
 				</div>
 			</div>
 			<div class="content">
@@ -63,18 +73,28 @@
 				<div class="slideshow">
 					<figure class="slide slide--current">
 						<span class="slide__number">01</span>
-						<img class="slide__img" src="img/1.png" alt="A black image" />
+						<img class="slide__img" src="img/1.jpg" alt="A black image" />
 						<figcaption class="slide__caption">The last few nights he had had the most uncertain feelings about the sidewalk just around the corner here, moving in the starlight toward his house. <a href="#" class="slide__more">Read more</a></figcaption>
 					</figure>
 					<figure class="slide">
 						<span class="slide__number">02</span>
-						<img class="slide__img" src="img/2.png" alt="A black image" />
-						<figcaption class="slide__caption">The autumn leaves blew over the moonlit pavement in such a way as to make the girl who was moving there seem fixed to a sliding walk. <a href="#" class="slide__more">Read more</a></figcaption>
+						<img class="slide__img" src="img/2.jpg" alt="A black image" />
+						<figcaption class="slide__caption">The autumn leaves blew over the moonlit pavement in such a way as to make the girl who was moving there seem fixed to a sliding walk.</figcaption>
 					</figure>
 					<figure class="slide">
 						<span class="slide__number">03</span>
-						<img class="slide__img" src="img/3.png" alt="A black image" />
-						<figcaption class="slide__caption">They walked in the warm-cool blowing night on the silvered pavement and there was the faintest breath of fresh apricots and strawberries in the air. <a href="#" class="slide__more">Read more</a></figcaption>
+						<img class="slide__img" src="img/3.jpg" alt="A black image" />
+						<figcaption class="slide__caption">They walked in the warm-cool blowing night on the silvered pavement and there was the faintest breath of fresh apricots and strawberries in the air.</figcaption>
+					</figure>
+					<figure class="slide">
+						<span class="slide__number">04</span>
+						<img class="slide__img" src="img/1.jpg" alt="A black image" />
+						<figcaption class="slide__caption">The last few nights he had had the most uncertain feelings about the sidewalk just around the corner here, moving in the starlight toward his house.</figcaption>
+					</figure>
+					<figure class="slide">
+						<span class="slide__number">05</span>
+						<img class="slide__img" src="img/2.jpg" alt="A black image" />
+						<figcaption class="slide__caption">The autumn leaves blew over the moonlit pavement in such a way as to make the girl who was moving there seem fixed to a sliding walk.</figcaption>
 					</figure>
 				</div>
 			</div>

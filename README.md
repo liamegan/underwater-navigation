@@ -4,9 +4,9 @@ An WebGL navigation that builds from any supplied HTML navigation. By Liam Egan.
 
 ![Image Title](link)
 
-[Article on Codrops](https://tympanus.net/codrops/?p=)
+[Article on Codrops](https://tympanus.net/codrops/?p=39952)
 
-[Demo](http://tympanus.net/Development/.../)
+[Demo](http://tympanus.net/Development/underwater-navigation/)
 
 ## Credits
 
@@ -14,7 +14,7 @@ An WebGL navigation that builds from any supplied HTML navigation. By Liam Egan.
 - [Perlin Noise](https://mrl.nyu.edu/~perlin/paper445.pdf) by Ken Perlin
 - [Fast Gaussian Blur](https://github.com/Jam3/glsl-fast-gaussian-blur)
 - [Web Font Loader](https://github.com/typekit/webfontloader) by Typekit
-- Font: [Abril Fatface](https://fonts.google.com/specimen/Abril+Fatface?selection.family=Abril+Fatface) by Typetogether (courtesy Google Fonts)
+- Font: [JAF Bernini Sand](https://fonts.adobe.com/fonts/jaf-bernini) and [Tenez](https://fonts.adobe.com/fonts/tenez)
 - Inspired by: [Holidays Menu](https://dribbble.com/shots/5734493-Holidays-Menu) by BestServedBold
 
 ## License

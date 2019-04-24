@@ -335,7 +335,7 @@ class HoverFilter extends PIXI.Filter {
     float pattern = distortedFBM(vec3(uv, t));
     pattern *= pattern * 1.2;
     // Create our base colour
-    vec4 rtn = vec4( 0.145, 0.239, 0.357, 1. ); // dark blue
+    vec4 rtn = vec4( 0.81, 0.33, 0, 1. ); // dark blue
     // mux this colour with another based on the noise value
     rtn = mix(rtn, vec4( 1. ), smoothstep(.0, 1., pattern)); // sort of a light light grey colour
     return rtn;
@@ -534,7 +534,7 @@ class Navigation {
     ctx.font = `${fontWeight} ${fontSize}px ${font}`;
     ctx.textAlign="center";
     ctx.textBaseline="bottom"; 
-    ctx.fillStyle = "rgba(40,50,60,1)";
+    ctx.fillStyle = "rgba(223,143,86,1)";
     ctx.fillText(title, c.width*.5, c.height-fontSize*.2);
 
     return c;
@@ -853,7 +853,7 @@ class Navigation {
    * the colour as a number
    *
    * @type {number/string}
-   * @default 0xF9F9F9
+   * @default 0x151515
    */
   set backgroundColour(value) {
     // A regex that determines whether the passed string (if string it is)
@@ -870,7 +870,7 @@ class Navigation {
     this.setupBackground();
   }
   get backgroundColour() {
-    return this._backgroundColour || 0xc57942;
+    return this._backgroundColour || 0x151515;
   }
 
   /**

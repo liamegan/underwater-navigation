@@ -6,7 +6,7 @@ article,aside,details,figcaption,figure,footer,header,hgroup,main,nav,section,su
 }
 
 :root {
-	font-size: 16px;
+	font-size: 14px;
 }
 
 html, body {
@@ -128,7 +128,6 @@ main {
 }
 
 .slide__caption {
-	font-size: 0.85rem;
 	margin: 1rem 0 0 0;
 	opacity: 0;
 	pointer-events: none;
@@ -137,6 +136,7 @@ main {
 
 .slide--current .slide__caption {
 	opacity: 1;
+	pointer-events: auto;
 }
 
 .slide__more {
@@ -163,7 +163,7 @@ main {
 	margin: 0.5rem 0 0 0;
 	font-family: tenez, serif;
 	font-weight: 700;
-	font-size: 2.25rem;
+	font-size: 2.75rem;
 	line-height: 1;
 }
 
@@ -172,7 +172,7 @@ main {
 		flex-wrap: nowrap;
 	}
 	.content__title-wrap {
-		width: 50%;
+		width: calc(50% - 16px);
 		height: 100%;
 	}
 	.content__title-wrap::after {
@@ -185,6 +185,14 @@ main {
 	}
 	.slideshow {
 		padding: 0;
+	}
+	.slide__caption {
+		height: 150px;
+		display: flex;
+		flex-direction: column;
+	}
+	.slide__more {
+		margin-top: auto;
 	}
 }
 
@@ -200,7 +208,7 @@ main {
 		text-align: left;
 		max-width: none;
 		padding: 2rem;
-		grid-template-columns: 50% 25% 25%;
+		grid-template-columns: calc(50% - 16px) 25% calc(25% + 16px);
 		grid-template-areas: 'title menu links';
 	}
 	.frame__title-wrap {

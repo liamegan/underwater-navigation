@@ -1,5 +1,6 @@
 .nav-toggle {
 	cursor: pointer;
+	display: inline-block;
 }
 
 .nav-toggle:focus {
@@ -64,34 +65,11 @@ ul.main-nav__fallback a {
 }
 
 .main-nav__close {
-	height: 20px;
 	position: fixed;
-	right: 3rem;
+	left: 50%;
+	transform: translateX(-50%);
 	top: 2rem;
 	z-index: 101;
-	width: 20px;
 	cursor: pointer;
-}
-
-.main-nav__close::before,
-.main-nav__close::after {
-	position: absolute;
-	left: 9px;
-	content: ' ';
-	height: 20px;
-	width: 3px;
-	background-color: #000;
-}
-
-.main-nav__close:hover::before,
-.main-nav__close:hover::after {
-	background-color: #fff;
-}
-
-.main-nav__close::before {
-	transform: rotate(45deg);
-}
-
-.main-nav__close::after {
-	transform: rotate(-45deg);
+	fill: #df8f56;
 }
