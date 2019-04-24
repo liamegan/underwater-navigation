@@ -893,6 +893,28 @@ class Navigation {
   }
 
   /**
+   * (getter/setter) A flag that specifies whether the the user is
+   * currently dragging the simulation. This exists to toggle the
+   * animation of the position based on the pointer position when
+   * the user is interacting by dragging.
+   *
+   * @type {bolean}
+   * @default false
+   */
+  set dragging(value) {
+    if(value === true) {
+      this.old_animatingPointer = this.animatingPointer;
+      this.animatingPointer = false;
+      this._dragging = true;
+    } else {
+      this._dragging = false;
+    }
+  }
+  get dragging() {
+    return this._dragging || false;
+  }
+
+  /**
    * (getter/setter) The position of the mouse/pointer on screen. This 
    * updates the position of the navigation in response to the cursor
    * and fixes the mouse position before passing it to the screen
